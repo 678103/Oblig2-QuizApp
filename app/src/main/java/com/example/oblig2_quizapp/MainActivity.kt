@@ -1,3 +1,4 @@
+
 package com.example.oblig2_quizapp
 
 import android.content.Intent
@@ -10,7 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState) //onCreate
 
@@ -28,9 +29,9 @@ class MainActivity : AppCompatActivity(){
             startActivity(intentGallery)
         }
 
-        btnQuiz.setOnClickListener {
-            val intentQuiz = Intent(this, QuizActivity::class.java)
-            startActivity(intentQuiz) //vi trigger nå ny activity. intent er som en slags mld
-        }
+//        btnQuiz.setOnClickListener {
+//            val intentQuiz = Intent(this, QuizActivity::class.java)
+//            startActivity(intentQuiz) //vi trigger nå ny activity. intent er som en slags mld
+//        }
     }
 }

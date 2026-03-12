@@ -12,16 +12,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Oblig2QuizApp">
 
-        <!--  compose activities  -->
-        <activity android:name=".GalleryActivity" android:exported="true"/>
-        <activity android:name=".QuizActivity" android:exported="true"/>
+        <activity android:name=".GalleryActivity" />
 
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
