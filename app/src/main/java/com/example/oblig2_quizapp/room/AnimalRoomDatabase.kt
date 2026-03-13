@@ -20,6 +20,7 @@ abstract class AnimalRoomDatabase : RoomDatabase() { //hvorfor abstract?
 
     companion object {
 
+        //sikrer at bare én database opprettes
         private var INSTANCE: AnimalRoomDatabase? = null
 
         fun getDatabase(context: Context): AnimalRoomDatabase {
@@ -29,29 +30,30 @@ abstract class AnimalRoomDatabase : RoomDatabase() { //hvorfor abstract?
                     AnimalRoomDatabase::class.java,
                     "animal_database"
                 )
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-
-                            // Kjører i bakgrunnstråd
-                            CoroutineScope(Dispatchers.IO).launch {
-                                // Hent DAO via INSTANCE etter at databasen er bygd
-                                INSTANCE?.animalDAO()?.apply {
-                                    insertAnimal(
-                                        Animal(animalName = "cat", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/cat")
-                                    )
-                                    insertAnimal(Animal(animalName = "dog", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/dog")
-                                    )
-                                    insertAnimal(Animal(animalName = "fish", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/fish")
-                                    )
-                                }
-                            }
-                        }
-                    })
+                    .addCallback(AnimalDatabaseCallback())
                     .build()
 
                 INSTANCE = instance
                 return instance
+            }
+        }
+
+        private class AnimalDatabaseCallback() : RoomDatabase.Callback() {
+
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+
+                    // Hent DAO via INSTANCE etter at databasen er bygd
+                    INSTANCE?.let { database ->
+                        CoroutineScope(Dispatchers.IO).launch {
+
+                            //Room gir en implementasjon av DAO som gjør av vi kan bruke funksjonene insert
+                        val dao = database.animalDAO()
+                            dao.insertAnimal(Animal(animalName = "cat", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/cat"))
+                            dao.insertAnimal(Animal(animalName = "dog", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/dog"))
+                            dao.insertAnimal(Animal(animalName = "fish", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/fish"))
+                    }
+                }
             }
         }
     }

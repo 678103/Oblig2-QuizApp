@@ -15,6 +15,8 @@ class AnimalRepository(private val animalDAO: AnimalDAO){
     //Repositoryklassen må inneha metoder som viewModel kan kalle for å starte databaseoperasjoner
     //Repoet vil bruke coroutine der det er nødvendig for å unngå å utføre databaseoperasjoner på hovedtråden
 
+
+    //Gir LiveData som UI kan observere
     val allAnimals: LiveData<List<Animal>> = animalDAO.getAllAnimals()
 
    // val searchResults = MutableLiveData<List<Animal>>()
@@ -22,6 +24,7 @@ class AnimalRepository(private val animalDAO: AnimalDAO){
     //så lenge du gjør noe med databaser så må du gjøre det i en egen tråd! derfor dispatcher
     //coroutineScope for å kjøre DB-operasjoner i bakgrunnen
 
+    //Kjører DB-operasjoner på bakgrunnstråd
     private val coroutineScope = CoroutineScope(Dispatchers.Main) //vi initialiserer dette kun en gang
 
     fun insertAnimal (newAnimal:Animal) {

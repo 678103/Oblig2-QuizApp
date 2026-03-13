@@ -2,7 +2,6 @@ package com.example.oblig2_quizapp.room
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 
@@ -32,5 +31,5 @@ interface AnimalDAO {
 // DAO is using Livedata so that the repo can observe changes to the database
 
     @Query("SELECT COUNT(*) FROM ANIMALS")
-    fun getCount(): Int
+    fun getCount(): LiveData<Int>
 }

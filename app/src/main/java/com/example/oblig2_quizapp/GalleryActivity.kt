@@ -1,5 +1,6 @@
 package com.example.oblig2_quizapp
 
+import android.content.Intent
 import androidx.compose.foundation.lazy.items
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -63,9 +64,17 @@ class GalleryActivity : ComponentActivity() {
 
 
         //Launcher for å hente URI fra bruker
-        val pickImage =
-            rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val pickImage = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent())
+            { uri ->
                 uri?.let {
+                  //Viktig! når jeg ikke hadde med persist permissions så forsvant brukerbildene når
+                    //jeg går inn og ut
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+
                     selectedURI = it.toString() //lagrer URI som en streng
                     showDialog = true //viser input for å skrive navn
                 }
@@ -96,6 +105,7 @@ class GalleryActivity : ComponentActivity() {
                     confirmButton = {
                         Button(onClick = {
                             if (newAnimalName.isNotBlank()) {
+
                                 // Legg til i databasen via ViewModel
                                 viewModel.insertAnimal(
                                     Animal(

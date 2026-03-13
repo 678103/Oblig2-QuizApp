@@ -12,7 +12,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Oblig2QuizApp">
 
+        <provider
+            android:name = ".provider.QuizContentProvider"
+            android:authorities = "com.example.oblig2_quizapp.provider"
+            android:exported = "true" />
+
         <activity android:name=".GalleryActivity" />
+        <activity android:name=".QuizActivity" />
 
         <activity
             android:name=".MainActivity"

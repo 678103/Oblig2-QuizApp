@@ -20,7 +20,7 @@ import androidx.room.PrimaryKey
         val animalName: String = "",
 
         //URI for brukerbilder(null hvis dette er drawable-bilde)
-        @ColumnInfo (name = "animalURI")
+        @ColumnInfo (name = "imageUri")
         val imageUri: String? = null,
 
         //Drawable ID for innebygde bilder (null hvis dette er brukerbilde)

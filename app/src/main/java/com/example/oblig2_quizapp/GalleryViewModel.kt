@@ -20,16 +20,14 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         //Henter DAO fra room
-        val animalDao =
-            AnimalRoomDatabase.getDatabase(application)!!.animalDAO() //hent DAO fra Room
-        //!! kaster exception hvis den er null
-
-        repository = AnimalRepository(animalDao) //lag repository
-        animals = repository.allAnimals //Livedata fra repository
+        val database = AnimalRoomDatabase.getDatabase(application)
+        repository = AnimalRepository(database.animalDAO())
+        animals  = repository.allAnimals
 
     }
 
     fun insertAnimal(animal: Animal) {
+        //viewmodelscope standard i android. coroutine stopper automatisk når viewModel dør
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertAnimal(animal)
         } //legg til nytt dyr

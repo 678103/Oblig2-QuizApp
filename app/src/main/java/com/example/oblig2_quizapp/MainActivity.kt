@@ -4,12 +4,7 @@ package com.example.oblig2_quizapp
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,9 +24,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(intentGallery)
         }
 
-//        btnQuiz.setOnClickListener {
-//            val intentQuiz = Intent(this, QuizActivity::class.java)
-//            startActivity(intentQuiz) //vi trigger nå ny activity. intent er som en slags mld
-//        }
+        btnQuiz.setOnClickListener {
+            val intentQuiz = Intent(this, QuizActivity::class.java)
+            startActivity(intentQuiz) //vi trigger nå ny activity. intent er som en slags mld
+        }
     }
 }
