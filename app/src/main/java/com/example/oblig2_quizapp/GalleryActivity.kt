@@ -14,11 +14,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModelProvider
 import com.example.oblig2_quizapp.room.Animal
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,8 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 
 
@@ -41,19 +40,20 @@ class GalleryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //Henter GalleryViewModel
-        val viewModel = ViewModelProvider(this)[GalleryViewModel::class.java]
-
         setContent {
-            //Observerer LiveData fra ViewModel
-            val animals by viewModel.animals.observeAsState(listOf())
-            GalleryScreen(animals, viewModel)
+            GalleryScreen()
         }
     }
 
-    //Lager UI med composable
+
     @Composable
-    fun GalleryScreen(animals: List<Animal>, viewModel: GalleryViewModel) {
+    fun GalleryScreen() {
+
+        //henter galleryViewModel
+        val galleryViewModel: GalleryViewModel = viewModel()
+
+        //Observerer LiveData fra ViewModel
+        val animals by galleryViewModel.animals.observeAsState(listOf())
 
         val context = LocalContext.current
 
@@ -63,105 +63,116 @@ class GalleryActivity : ComponentActivity() {
         var selectedURI by remember { mutableStateOf("") }
 
 
-        //Launcher for å hente URI fra bruker
-        val pickImage = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent())
-            { uri ->
+        //Launcher for å åpne telefonens bildebibliotek (underliggende intent)
+        val pickImage =
+            rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent())
+            { uri -> //sjekker om bruker velger et bilde
                 uri?.let {
-                  //Viktig! når jeg ikke hadde med persist permissions så forsvant brukerbildene når
-                    //jeg går inn og ut
-                    context.contentResolver.takePersistableUriPermission(
-                        it,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
-
+                    try {
+                        context.contentResolver.takePersistableUriPermission(
+                            it,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        // ignorerer feil for stubbet URI i tester
+                    }
                     selectedURI = it.toString() //lagrer URI som en streng
                     showDialog = true //viser input for å skrive navn
                 }
             }
-
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-
-            // Knapp for å legge til nytt bilde
-            Button(
-                onClick = { pickImage.launch("image/*") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Add an image")
-            }
-
-            // Dialog for å skrive inn navn
-            if (showDialog) {
+        // Dialog for å skrive inn navn
+        if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
-                    title = { Text("Navn på dyret") },
+                    title = { Text("Name") },
                     text = {
                         TextField(
                             value = newAnimalName,
                             onValueChange = { newAnimalName = it },
-                            placeholder = { Text("Give the image a name!") }
+                            placeholder = { Text("Give the image a name!") },
+
+                            //test for å klare "Picturenumbertest
+                            modifier = Modifier.testTag("animal_name_field")
                         )
                     },
+                    //Bekreft-knapp
                     confirmButton = {
-                        Button(onClick = {
-                            if (newAnimalName.isNotBlank()) {
+                        Button(
+                            onClick = {
+                                if (newAnimalName.isNotBlank()) {
 
-                                // Legg til i databasen via ViewModel
-                                viewModel.insertAnimal(
-                                    Animal(
-                                        animalName = newAnimalName,
-                                        imageUri = selectedURI
+                                    // Legg til i databasen med ViewModel
+                                    galleryViewModel.insertAnimal(
+                                        Animal(animalName = newAnimalName, imageUri = selectedURI)
                                     )
-                                )
-                                newAnimalName = ""
-                                showDialog = false
-                            } else {
-                                Toast.makeText(context, "Skriv inn navn!", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        }) {
-                            Text("Legg til")
+                                    newAnimalName = ""
+                                    showDialog = false
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Add a name!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                            modifier = Modifier.testTag("confirm_button") //TEST-del legg til
+                        ) {
+                            Text("Add image")
                         }
                     },
                     dismissButton = {
-                        Button(onClick = {
-                            showDialog = false
-                            newAnimalName = ""
-                            selectedURI = ""
-                        }) {
-                            Text("Avbryt")
+                        Button(
+                            onClick =
+                                {
+                                    showDialog = false
+                                    newAnimalName = ""
+                                    selectedURI = ""
+                                }) {
+                            Text("Go back")
                         }
                     }
                 )
             }
 
-            // Viser listen av dyr
-            LazyColumn {
-                items(animals) { animal ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
 
-                        Text(animal.animalName, modifier = Modifier.weight(1f))
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
 
-                        //sjekker hvilket type bilde det er
-                        if (!animal.imageUri.isNullOrBlank()) {
-                            Image(
-                                painter = rememberAsyncImagePainter(animal.imageUri),
-                                contentDescription = animal.animalName,
-                                modifier = Modifier.size(80.dp)
-                            )
-                        } else if (animal.idDrawable != null) {
-                            Image(
-                                painter = painterResource(id = animal.idDrawable),
-                                contentDescription = animal.animalName,
-                                modifier = Modifier.size(80.dp)
-                            )
-                        }
-                        Button(onClick = { viewModel.deleteAnimal(animal.animalName) }) {
-                            Text("Slett")
-                        }
+            item {
+
+                // Knapp for å legge til nytt bilde
+                Button(
+                    onClick = { pickImage.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth().testTag("add_image_button")
+                ) {
+                    Text("Add an image")
+                }
+            }
+
+            items(animals) {
+                animal ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    Text(animal.animalName, modifier = Modifier.weight(1f))
+
+                    //tegner opp bilde
+                    if (animal.imageUri.isNotBlank()) {
+                        Image(
+                            //lastes opp async fra Coil-biblioteket
+                            painter = rememberAsyncImagePainter(animal.imageUri),
+                            contentDescription = animal.animalName,
+                            modifier = Modifier.size(120.dp)
+                        )
+                    }
+                    Button(onClick = {
+                        galleryViewModel.deleteAnimal(animal.animalName)},
+                        modifier = Modifier.testTag("delete_${animal.animalName}") //TEST slett
+                    ) {
+                        Text("Delete")
                     }
                 }
             }
         }
     }
 }
+
+

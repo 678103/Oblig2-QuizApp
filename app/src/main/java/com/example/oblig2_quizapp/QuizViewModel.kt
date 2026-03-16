@@ -8,34 +8,30 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.example.oblig2_quizapp.room.AnimalRepository
 import com.example.oblig2_quizapp.room.Animal
+import androidx.lifecycle.LiveData
 import com.example.oblig2_quizapp.room.AnimalRoomDatabase
 
 class QuizViewModel(application: Application): AndroidViewModel(application) {
 
-    //make a galleryViewModel , list of animals pictures and names
-    //newImage- gi den en state
-    //no remember here since were not in a Composable
-
     //denne klassen holds all the data needed for the UI
     // brukes til å connecte til UI. Her skal alle bilder håndteres
- // Her må vi ha score for riktig poengscore
-    // i tillegg må det inneholde spørsmålet
 
-    private val repository: AnimalRepository
+    //Repository- mellomledd til databasen
+    private val repository: AnimalRepository //repository er mellomleddet til databasen
 
-    // Liste med alle dyr fra databasen
-    var allAnimals by mutableStateOf<List<Animal>>(emptyList())
-        private set
+    //deklarerer livedata-listen  med animals
+    val allAnimals: LiveData<List<Animal>>
 
-    //Dyret som vises akkurat nå
+
+    //Dyret som vises i Quiz akkurat nå
     var currentAnimal by mutableStateOf<Animal?>(null)
         private set
 
-    //listen med tre svaralternativer
+    // tre svaralternativer
     var answers by mutableStateOf<List<Animal>>(emptyList())
         private set
 
-    //antall riktige svar
+    //antall riktige svar på rad
     var quizScore by mutableIntStateOf(0)
         private set
 
@@ -43,55 +39,59 @@ class QuizViewModel(application: Application): AndroidViewModel(application) {
     var attempts by mutableIntStateOf(1)
         private set
 
-    //om resultatet vises
+    //om resultattekst skal vises
     var showResult by mutableStateOf(false)
         private set
 
-    //svaret som bruker valgte
+    //hva bruker trykket på av svar
     var selectedOption by mutableStateOf<String?>(null)
         private set
 
     init {
+        //kobler viewModel til Room via repository
         val database = AnimalRoomDatabase.getDatabase(application)
         repository = AnimalRepository(database.animalDAO())
-
-        // Observerer LiveData fra repository og oppdaterer Compose state
-        repository.allAnimals.observeForever { list ->
-            allAnimals = list
-
-            // Generer første spørsmål når det er minst 3 dyr
-            if (list.size >= 3 && currentAnimal == null) {
-                generateNewQuestion()
-            }
-        }
+        allAnimals = repository.animals
     }
 
-    //Lager nytt spørsmål, ett riktig og to feile svar
     // Lager nytt spørsmål: 1 riktig og 2 feil svar
-    fun generateNewQuestion() {
-        if (allAnimals.size < 3) return
+    fun generateNewQuestion(animalList: List<Animal>) {
+        if (animalList.size < 3) return
 
-        val animal = allAnimals.random()
+        val animal = animalList.random()
         currentAnimal = animal
 
-        val wrongAnswers = allAnimals.filter { it != animal }.shuffled().take(2)
+        val wrongAnswers = animalList
+            .filter { it != animal }
+            .shuffled()
+            .take(2)
+
+        //blander rett og gale svar
         answers = (listOf(animal) + wrongAnswers).shuffled()
 
-        // Nullstill resultat for UI
+        // Nullstill resultatvisning for nytt spm
         showResult = false
         selectedOption = null
     }
 
     // Sjekker brukerens svar og oppdaterer score
-    fun checkAnswer(selected: Animal) {
-        selectedOption = selected.animalName
+    fun checkAnswer(answer: Animal): Boolean {
+
+        //lagrer hva bruker valgte
+        selectedOption = answer.animalName
+
+        //viser resultat til UI
         showResult = true
 
-        if (selected == currentAnimal) {
+        val correct = answer.animalName == currentAnimal?.animalName
+
+        if (correct) {
             quizScore++
         } else {
             quizScore = 0
             attempts++
         }
+        return correct
     }
-}
+
+    }

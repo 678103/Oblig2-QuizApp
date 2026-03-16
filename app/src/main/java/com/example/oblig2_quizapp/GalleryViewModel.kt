@@ -5,12 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import com.example.oblig2_quizapp.room.AnimalRepository
 import com.example.oblig2_quizapp.room.Animal
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
 import com.example.oblig2_quizapp.room.AnimalRoomDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
-//AVM fordi vi må hente Room DAO vi application
+//AVM fordi vi må hente context i databasen (derfor application som parameter)
 
 class GalleryViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -18,26 +15,32 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
 
     val animals: LiveData<List<Animal>> //livedata med listen av dyr
 
+
+    //init kjøres automatisk når viewModel opprettes
     init {
-        //Henter DAO fra room
+        //Henter databasen -> henter dao -> lager repo og kobler livedata til animals
         val database = AnimalRoomDatabase.getDatabase(application)
+
+        //sender DAO inn i databasen, via konstruktør slik at repo kan bruke DAO for interaksjon med databasen
         repository = AnimalRepository(database.animalDAO())
-        animals  = repository.allAnimals
+
+        //kobler livedata til allAnimals
+        animals  = repository.animals
 
     }
-
     fun insertAnimal(animal: Animal) {
-        //viewmodelscope standard i android. coroutine stopper automatisk når viewModel dør
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.insertAnimal(animal)
-        } //legg til nytt dyr
+        repository.insertAnimal(animal)
+
     }
 
-    // Slett dyr på bakgrunnstråd
+    // Slett dyr
     fun deleteAnimal(name: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteAnimal(name)
+        repository.deleteAnimal(name)
         }
 
+    //for test
+    fun getAnimalCount(): Int {
+        //siden det er livedata så må vi hente ut nårævrende verdi
+        return animals.value?.size ?:0
     }
-}
+    }

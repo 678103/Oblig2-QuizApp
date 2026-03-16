@@ -11,16 +11,14 @@ import kotlinx.coroutines.launch
 
 
 //Oppsett for databasen, her bygger vi opp databasen med build
-//Skal kun lages en så pensumboken sier at "it is best to implement defensive code within the class
-//to prevent more than one instance from being created
-//Serves an abstraction layer over SQLite, making it
+//Serves an abstraction layer over SQLite
 @Database (entities = [Animal::class], version =1)
-abstract class AnimalRoomDatabase : RoomDatabase() { //hvorfor abstract?
+abstract class AnimalRoomDatabase : RoomDatabase() {
     abstract fun animalDAO(): AnimalDAO
 
     companion object {
 
-        //sikrer at bare én database opprettes
+        //sikrer at bare én database finnes i applikasjonen
         private var INSTANCE: AnimalRoomDatabase? = null
 
         fun getDatabase(context: Context): AnimalRoomDatabase {
@@ -38,21 +36,29 @@ abstract class AnimalRoomDatabase : RoomDatabase() { //hvorfor abstract?
             }
         }
 
-        private class AnimalDatabaseCallback() : RoomDatabase.Callback() {
+        //Callback fordi den setter inn bildene ETTER databasen er laget
+        //Callback er en indre klasse av RoomDatabase.
+        private class AnimalDatabaseCallback : Callback() {
+
 
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
 
                     // Hent DAO via INSTANCE etter at databasen er bygd
-                    INSTANCE?.let { database ->
+                    //.let er en Kotlin-funksjon som kjøres en  kodeblokk kun hvis objektet ikke er null
+                    INSTANCE?.let {
+                        database ->
                         CoroutineScope(Dispatchers.IO).launch {
+                            //Room gir en implementasjon av DAO som gjør at vi kan bruke funksjonene insert
+                             val dao = database.animalDAO()
 
-                            //Room gir en implementasjon av DAO som gjør av vi kan bruke funksjonene insert
-                        val dao = database.animalDAO()
-                            dao.insertAnimal(Animal(animalName = "cat", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/cat"))
-                            dao.insertAnimal(Animal(animalName = "dog", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/dog"))
-                            dao.insertAnimal(Animal(animalName = "fish", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/fish"))
-                    }
+                            dao.insertAnimal(
+                                Animal(animalName = "cat", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/cat"))
+                            dao.insertAnimal(
+                                Animal(animalName = "dog", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/dog"))
+                            dao.insertAnimal(
+                                Animal(animalName = "fish", imageUri = "android.resource://com.example.oblig2_quizapp/drawable/fish"))
+                        }           //packagename//drawable/imagename
                 }
             }
         }

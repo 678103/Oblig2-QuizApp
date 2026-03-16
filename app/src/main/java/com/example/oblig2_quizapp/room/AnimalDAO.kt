@@ -6,30 +6,22 @@ import androidx.room.Insert
 import androidx.room.Query
 
 //DAO defines methods for interacting with the database
-//for basic usecases you use interface
-//DAO dont have properties, but they do define one or more methods
-//for interacting with the data in you app's database
-//Query-metode som interagerer med databasen
+
 @Dao
 interface AnimalDAO {
 
-    //Legge til
+    //Legge til med innebygd Room-notasjon
     @Insert
-     fun insertAnimal(animal:Animal) //suspend = funksjonen kan midlertidig stoppe og systemet
-    //kan gjøre andre ting i mellomtiden
+     fun insertAnimal(animal:Animal)
 
-    //Slette
+    //Slette, med egendefinert Query
     @Query("DELETE FROM animals WHERE animalName = :name")
     fun deleteAnimal(name:String)
 
-    @Query("SELECT * FROM animals where animalName = :name")
-    fun findAnimal(name: String) : List<Animal>
 
-    //hente ut alle i en liste
+    //henter ut alle dyr i en LiveData-liste
     @Query("SELECT * FROM animals")
     fun getAllAnimals(): LiveData<List<Animal>>
-// DAO is using Livedata so that the repo can observe changes to the database
 
-    @Query("SELECT COUNT(*) FROM ANIMALS")
-    fun getCount(): LiveData<Int>
+
 }

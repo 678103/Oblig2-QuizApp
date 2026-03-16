@@ -10,6 +10,7 @@ import androidx.room.PrimaryKey
 // imageURI er den pathen vi lagrer bilde til
 
     @Entity (tableName = "animals")
+
     class Animal (
 
         @PrimaryKey (autoGenerate = true)
@@ -19,13 +20,9 @@ import androidx.room.PrimaryKey
         @ColumnInfo (name= "animalName")
         val animalName: String = "",
 
-        //URI for brukerbilder(null hvis dette er drawable-bilde)
+        //URI for bilder
         @ColumnInfo (name = "imageUri")
-        val imageUri: String? = null,
-
-        //Drawable ID for innebygde bilder (null hvis dette er brukerbilde)
-        @ColumnInfo (name = "idDrawable")
-        val idDrawable: Int? = null
+        val imageUri: String = ""
 
     )
 
